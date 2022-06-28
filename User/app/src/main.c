@@ -16,8 +16,8 @@
 
 /* 定义例程名和例程发布日期 */
 #define EXAMPLE_NAME	"MODBUS控制伺服电机"
-#define EXAMPLE_DATE	"2021-01-27"
-#define DEMO_VER			"6.1"
+#define EXAMPLE_DATE	"2022-06-28"
+#define DEMO_VER			"1.0"
 
 /* 仅允许本文件内调用的函数声明 */
 static void PrintfLogo(void);
@@ -57,214 +57,192 @@ static void PrintfLogo(void)
 *	返 回 值: 无
 *********************************************************************************************************
 */
-void PortScan(void)
+void motor_finish(uint8_t* state_axis_FINISH, uint8_t axis)
 {
-	static uint8_t state_EMR_STOP  = IDLE;
-	static uint8_t state_Y_FINISH 	 = IDLE;
-  static uint8_t state_X1_FINISH 	 = IDLE;
-	static uint8_t state_Z1_FINISH 	 = IDLE;
-  static uint8_t state_X2_FINISH 	 = IDLE;
-	static uint8_t state_Z2_FINISH 	 = IDLE;
-	
-	/* 急停按钮输入 */
-	switch(state_EMR_STOP)
+	uint8_t axis_result = 0;
+  switch(axis)
+  {
+    case SERVOY:
+      axis_result = Y_FINISH; break;
+    case SERVOX1:
+      axis_result = X1_FINISH; break;
+    case SERVOZ1:
+      axis_result = Z1_FINISH; break;
+    case SERVOX2:
+      axis_result = X2_FINISH; break;
+    case SERVOZ2:
+      axis_result = Z2_FINISH; break;
+    case SERVOX3:
+      axis_result = X3_FINISH; break;
+    case SERVOZ3:
+      axis_result = Z3_FINISH; break;
+    default:;    
+  }
+  
+	switch(*state_axis_FINISH)
 	{
 		case IDLE:
-			if(EMR_STOP == 1) state_EMR_STOP = WAIT_UP_1;
+			if(axis_result == 1) *state_axis_FINISH = WAIT_UP_1;
 		break;
 		case WAIT_UP_1:
-			if(EMR_STOP == 1) state_EMR_STOP = WAIT_UP_2;
-			else state_EMR_STOP = IDLE;
+			if(axis_result == 1) *state_axis_FINISH = WAIT_UP_2;
+			else *state_axis_FINISH = IDLE;
 		break;
 		case WAIT_UP_2:
-			if(EMR_STOP == 1)
+			if(axis_result == 1)
 			{
-				g_tCtrlH.EMR_Stop = 0x01;	//产生急停信号
-        printf("9");
-				state_EMR_STOP = WAIT_DOWN_1;	//等待急停信号释放
+				*state_axis_FINISH = WAIT_DOWN_1;
+				g_tCtrlH.Motor_finish[axis] = 0;	//清零到位信号
 			}
-			else state_EMR_STOP = IDLE;
+			else *state_axis_FINISH = IDLE;
 		break;			
 		case WAIT_DOWN_1:
-			if(EMR_STOP == 0) state_EMR_STOP = WAIT_DOWN_2_1;
+			if(axis_result == 0) *state_axis_FINISH = WAIT_DOWN_2;
+		break;
+		case WAIT_DOWN_2:
+			if(axis_result == 0)
+			{
+				*state_axis_FINISH = IDLE;
+				g_tCtrlH.Motor_finish[axis] = 1;	//置位到位信号
+        printf("%d", axis);
+			}				
+			else *state_axis_FINISH = WAIT_DOWN_1;
+		break;
+	}
+}
+
+void motor_alarm(uint8_t* state_axis_ALARM, uint8_t axis)
+{
+	uint8_t axis_result = 0;
+  switch(axis)
+  {
+    case SERVOY:
+      axis_result = Y_Alarm; break;
+    case SERVOX1:
+      axis_result = X1_Alarm; break;
+    case SERVOZ1:
+      axis_result = Z1_Alarm; break;
+    case SERVOX2:
+      axis_result = X2_Alarm; break;
+    case SERVOZ2:
+      axis_result = Z2_Alarm; break;
+    case SERVOX3:
+      axis_result = X3_Alarm; break;
+    case SERVOZ3:
+      axis_result = Z3_Alarm; break;
+    default:;    
+  }
+  
+	switch(*state_axis_ALARM)
+	{
+		case IDLE:
+			if(axis_result == 0) *state_axis_ALARM = WAIT_UP_1;
+		break;
+		case WAIT_UP_1:
+			if(axis_result == 0) *state_axis_ALARM = WAIT_UP_2;
+			else *state_axis_ALARM = IDLE;
+		break;
+		case WAIT_UP_2:
+			if(axis_result == 0)
+			{
+				*state_axis_ALARM = WAIT_DOWN_1;
+				g_tCtrlH.Motor_alarm[axis] = 0;	//清零报警信号
+			}
+			else *state_axis_ALARM = IDLE;
+		break;			
+		case WAIT_DOWN_1:
+			if(axis_result == 1) *state_axis_ALARM = WAIT_DOWN_2;
+		break;
+		case WAIT_DOWN_2:
+			if(axis_result == 1)
+			{
+				*state_axis_ALARM = IDLE;
+				g_tCtrlH.Motor_alarm[axis] = 1;	//置位报警信号
+        printf("%d", axis+0x60);
+			}				
+			else *state_axis_ALARM = WAIT_DOWN_1;
+		break;
+	}
+}
+
+void common_signals(uint8_t* state_signal, uint8_t signal)
+{
+	uint8_t sig_result = 0;
+  switch(signal)
+  {
+    case Sig_EMR_STOP:
+      sig_result = EMR_STOP; break;
+    case Sig_PWR_STATE:
+      sig_result = PWR_STATE; break;
+    case Sig_BOARD_DETC:
+      sig_result = BOARD_DETC; break;
+    case Sig_OBST_DETC:
+      sig_result = OBST_DETC; break;
+    case Sig_DOOR_DETC:
+      sig_result = DOOR_DETC; break;
+    default:;    
+  }
+
+	/* 急停按钮输入 */
+	switch(*state_signal)
+	{
+		case IDLE:
+			if(sig_result == 1) *state_signal = WAIT_UP_1;
+		break;
+		case WAIT_UP_1:
+			if(sig_result == 1) *state_signal = WAIT_UP_2;
+			else *state_signal = IDLE;
+		break;
+		case WAIT_UP_2:
+			if(sig_result == 1)
+			{
+				g_tCtrlH.signals[signal] = 0x01;	//产生信号
+        printf("%d", signal+0xA0);
+				*state_signal = WAIT_DOWN_1;	//等待信号释放
+			}
+			else *state_signal = IDLE;
+		break;			
+		case WAIT_DOWN_1:
+			if(sig_result == 0) *state_signal = WAIT_DOWN_2_1;
 		break;
 		case WAIT_DOWN_2_1:
-			if(EMR_STOP == 0) state_EMR_STOP = WAIT_DOWN_1_1;
+			if(sig_result == 0) *state_signal = WAIT_DOWN_1_1;
 		break;
 		case WAIT_DOWN_1_1:
-			if(EMR_STOP == 0) state_EMR_STOP = WAIT_DOWN_1_2;
+			if(sig_result == 0) *state_signal = WAIT_DOWN_1_2;
 		break;
 		case WAIT_DOWN_1_2:
-			if(EMR_STOP == 0) state_EMR_STOP = WAIT_DOWN_2;
+			if(sig_result == 0) *state_signal = WAIT_DOWN_2;
 		break;
 		case WAIT_DOWN_2:
-			if(EMR_STOP == 0)
+			if(sig_result == 0)
 			{
-				g_tCtrlH.EMR_Stop = 0x00;
-				state_EMR_STOP = IDLE;
+				g_tCtrlH.signals[signal] = 0x00;
+				*state_signal = IDLE;
 			}				
-			else state_EMR_STOP = WAIT_DOWN_1;
+			else *state_signal = WAIT_DOWN_1;
 		break;
 	}
+}
+
+void PortScan(void)
+{
+	static uint8_t state_Sig[5]  = {IDLE};
+	static uint8_t state_FINISH[7] 	 = {IDLE}; 
+  static uint8_t state_ALARM[7] 	 = {IDLE};
 	
-	/* Y轴到位信号输出 */
-	switch(state_Y_FINISH)
-	{
-		case IDLE:
-			if(Y_FINISH == 1) state_Y_FINISH = WAIT_UP_1;
-		break;
-		case WAIT_UP_1:
-			if(Y_FINISH == 1) state_Y_FINISH = WAIT_UP_2;
-			else state_Y_FINISH = IDLE;
-		break;
-		case WAIT_UP_2:
-			if(Y_FINISH == 1)
-			{
-				state_Y_FINISH = WAIT_DOWN_1;
-				g_tCtrlH.Y_finish = 0;	//清零到位信号
-			}
-			else state_Y_FINISH = IDLE;
-		break;			
-		case WAIT_DOWN_1:
-			if(Y_FINISH == 0) state_Y_FINISH = WAIT_DOWN_2;
-		break;
-		case WAIT_DOWN_2:
-			if(Y_FINISH == 0)
-			{
-				state_Y_FINISH = IDLE;
-				g_tCtrlH.Y_finish = 1;	//置位到位信号
-        printf("0");
-			}				
-			else state_Y_FINISH = WAIT_DOWN_1;
-		break;
-	}
+  for(int i = 0; i<Sig_ALL; i++)
+  {
+    common_signals(&state_Sig[i], i);
+  }
   
-  /* X1轴到位信号输出 */
-	switch(state_X1_FINISH)
-	{
-		case IDLE:
-			if(X1_FINISH == 1) state_X1_FINISH = WAIT_UP_1;
-		break;
-		case WAIT_UP_1:
-			if(X1_FINISH == 1) state_X1_FINISH = WAIT_UP_2;
-			else state_X1_FINISH = IDLE;
-		break;
-		case WAIT_UP_2:
-			if(X1_FINISH == 1)
-			{
-				state_X1_FINISH = WAIT_DOWN_1;
-				g_tCtrlH.X1_finish = 0;	//清零到位信号
-			}
-			else state_X1_FINISH = IDLE;
-		break;			
-		case WAIT_DOWN_1:
-			if(X1_FINISH == 0) state_X1_FINISH = WAIT_DOWN_2;
-		break;
-		case WAIT_DOWN_2:
-			if(X1_FINISH == 0)
-			{
-				state_X1_FINISH = IDLE;
-				g_tCtrlH.X1_finish = 1;	//置位到位信号
-        printf("1");
-			}				
-			else state_X1_FINISH = WAIT_DOWN_1;
-		break;
-	}
-	
-	/* Z1轴到位信号输出 */
-	switch(state_Z1_FINISH)
-	{
-		case IDLE:
-			if(Z1_FINISH == 1) state_Z1_FINISH = WAIT_UP_1;
-		break;
-		case WAIT_UP_1:
-			if(Z1_FINISH == 1) state_Z1_FINISH = WAIT_UP_2;
-			else state_Z1_FINISH = IDLE;
-		break;
-		case WAIT_UP_2:
-			if(Z1_FINISH == 1)
-			{
-				state_Z1_FINISH = WAIT_DOWN_1;
-				g_tCtrlH.Z1_finish = 0;	//清零到位信号
-			}
-			else state_Z1_FINISH = IDLE;
-		break;			
-		case WAIT_DOWN_1:
-			if(Z1_FINISH == 0) state_Z1_FINISH = WAIT_DOWN_2;
-		break;
-		case WAIT_DOWN_2:
-			if(Z1_FINISH == 0)
-			{
-				state_Z1_FINISH = IDLE;
-				g_tCtrlH.Z1_finish = 1;	//置位到位信号
-        printf("2");
-			}				
-			else state_Z1_FINISH = WAIT_DOWN_1;
-		break;
-	}
+	for(int i = 0; i<SERVO_ALL; i++)
+  {
+    /* 轴到位信号输入 */
+    motor_finish(&state_FINISH[i], i);
+    /* 轴报警信号输入 */
+    motor_alarm(&state_ALARM[i], i);
+  }
   
-  /* X2轴到位信号输出 */
-	switch(state_X2_FINISH)
-	{
-		case IDLE:
-			if(X2_FINISH == 1) state_X2_FINISH = WAIT_UP_1;
-		break;
-		case WAIT_UP_1:
-			if(X2_FINISH == 1) state_X2_FINISH = WAIT_UP_2;
-			else state_X1_FINISH = IDLE;
-		break;
-		case WAIT_UP_2:
-			if(X2_FINISH == 1)
-			{
-				state_X2_FINISH = WAIT_DOWN_1;
-				g_tCtrlH.X2_finish = 0;	//清零到位信号
-			}
-			else state_X2_FINISH = IDLE;
-		break;			
-		case WAIT_DOWN_1:
-			if(X2_FINISH == 0) state_X2_FINISH = WAIT_DOWN_2;
-		break;
-		case WAIT_DOWN_2:
-			if(X2_FINISH == 0)
-			{
-				state_X2_FINISH = IDLE;
-				g_tCtrlH.X2_finish = 1;	//置位到位信号
-        printf("3");
-			}				
-			else state_X2_FINISH = WAIT_DOWN_1;
-		break;
-	}
-  
-  /* Z2轴到位信号输出 */
-	switch(state_Z2_FINISH)
-	{
-		case IDLE:
-			if(Z2_FINISH == 1) state_Z2_FINISH = WAIT_UP_1;
-		break;
-		case WAIT_UP_1:
-			if(Z2_FINISH == 1) state_Z2_FINISH = WAIT_UP_2;
-			else state_Z2_FINISH = IDLE;
-		break;
-		case WAIT_UP_2:
-			if(Z2_FINISH == 1)
-			{
-				state_Z2_FINISH = WAIT_DOWN_1;
-				g_tCtrlH.Z2_finish = 0;	//清零到位信号
-			}
-			else state_Z2_FINISH = IDLE;
-		break;			
-		case WAIT_DOWN_1:
-			if(Z2_FINISH == 0) state_Z2_FINISH = WAIT_DOWN_2;
-		break;
-		case WAIT_DOWN_2:
-			if(Z2_FINISH == 0)
-			{
-				state_Z2_FINISH = IDLE;
-				g_tCtrlH.Z2_finish = 1;	//置位到位信号
-        printf("4");
-			}				
-			else state_Z2_FINISH = WAIT_DOWN_1;
-		break;
-	}
 }
 

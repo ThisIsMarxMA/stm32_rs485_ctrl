@@ -387,7 +387,7 @@ void SerialUpload_SetBaud(uint32_t _baud)
 extern void UploadH_ReciveNew(uint8_t _data);
 void SerialUpload_ReciveNew(uint8_t _byte)
 {
-	UploadH_ReciveNew(_byte);	/* 处理串口2接收到新字节 */
+	UploadH_ReciveNew(_byte);	/* 处理串口接收到新字节 */
 }
 
 void SerialUpload_SendBuf(uint8_t *_ucaBuf, uint16_t _usLen)
@@ -908,11 +908,21 @@ void _sys_exit(int x)
 //重定义fputc函数 
 int fputc(int ch, FILE *f)
 { 	
+#if UART1_FIFO_EN == 1
   bsp_LedOn(2);
 	while((USART1->SR&0X40)==0);//循环发送,直到发送完毕   
 	USART1->DR = (u8) ch;      
   bsp_LedOff(2);
 	return ch;
+#endif
+  
+#if UART5_FIFO_EN == 1
+  bsp_LedOn(2);
+	while((UART5->SR&0X40)==0);//循环发送,直到发送完毕   
+	UART5->DR = (u8) ch;      
+  bsp_LedOff(2);
+	return ch;
+#endif
 }
 #endif
 

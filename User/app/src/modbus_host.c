@@ -42,23 +42,45 @@ void UploadH_SendError(void);
 *	返 回 值: 无
 *********************************************************************************************************
 */
-int8_t ZBREAK_IsLocked(void)
+int8_t ZBREAK_IsLocked(int axis)
 {
-	return g_tCtrlH.ZBREAK_Lock;
+	return g_tCtrlH.Z_Lock[axis];
 }	
 
-void ZBREAK_Lock(void)
+void ZBREAK_Lock(int axis)
 {
-	ZBRAKE_CLOSE;		//刹车锁紧
-	g_tCtrlH.Zstate = 0x00;
-	g_tCtrlH.ZBREAK_Lock = 1;
+  switch(axis)
+  {
+    case SERVOY:
+      YBRAKE_CLOSE; break;
+    case SERVOZ1:
+      Z1BRAKE_CLOSE; break;
+    case SERVOZ2:
+      Z2BRAKE_CLOSE; break;
+    case SERVOZ3:
+      Z3BRAKE_CLOSE; break; 
+    default:;
+  }
+	g_tCtrlH.Motor_state[axis] = 0x00;
+	g_tCtrlH.Z_Lock[axis] = LOCKED;
 }
 
-void ZBREAK_Unlock(void)
+void ZBREAK_Unlock(int axis)
 {
-	ZBRAKE_RELEASE;	//刹车释放
-	g_tCtrlH.Zstate = 0x01;
-	g_tCtrlH.ZBREAK_Lock = 0;
+	  switch(axis)
+  {
+    case SERVOY:
+      YBRAKE_RELEASE; break;
+    case SERVOZ1:
+      Z1BRAKE_RELEASE; break;
+    case SERVOZ2:
+      Z2BRAKE_RELEASE; break;
+    case SERVOZ3:
+      Z3BRAKE_RELEASE; break; 
+    default:;
+  }
+	g_tCtrlH.Motor_state[axis] = 0x01;
+	g_tCtrlH.Z_Lock[axis] = UNLOCKED;
 }
 
 /*
@@ -147,8 +169,11 @@ static void UploadH_AnalyseFrame(void)
 	uint8_t temp_buf[4] = {0};
 	uint8_t *ptr1,*ptr2;
 	
-	/* 转换得到帧ID */
-	ptr1 = &g_tUploadH.RxBuf[1];
+  /* 转换得到通道ID *///'A' 'B' 'C'
+	g_tCtrlH.ChannelID = g_tUploadH.RxBuf[1];
+	
+  /* 转换得到帧ID */ // "/A/13/4/1"
+  ptr1 = &g_tUploadH.RxBuf[3];
 	ptr2 = temp_buf;
 	while((*ptr1 != '/')&&(ptr2 <= &temp_buf[3]))
 	{
@@ -157,14 +182,14 @@ static void UploadH_AnalyseFrame(void)
 		ptr2++;
 	}
 	while(ptr2 <= &temp_buf[3]) *(ptr2++) = 0;	//清零剩余位
-	
 	g_tCtrlH.FrameID = atoi((char *)temp_buf);
 	
-	/* 转换得到通道ID */
-	if(g_tUploadH.RxBuf[4] == 'A')
-		g_tCtrlH.ChannelID = 0x00;
-	else
-		g_tCtrlH.ChannelID = 0x01;
+  /* 转换得到物体ID */ // "/A/13/4/1"
+  ptr1 = &g_tUploadH.RxBuf[6];
+	g_tCtrlH.ObjectID = atoi((char *)ptr1);
+  /* 转换得到物体状态 */
+  ptr1 = &g_tUploadH.RxBuf[8];
+	g_tCtrlH.ObjectState = atoi((char *)ptr1);
 	 											 	
 	/* 处理相应帧 */
 	switch (g_tCtrlH.FrameID)
@@ -173,19 +198,19 @@ static void UploadH_AnalyseFrame(void)
       UploadH_Read_0x11();
     break;
     
-		case 0x0C:	//刹车锁紧释放帧 
+		case 0x0C:	
 			UploadH_Read_0x12();
 		break;
 		
-		case 0x0D:	//标定开始/结束帧 控制灯
+		case 0x0D:	
 			UploadH_Read_0x13();
 		break;
 		
-		case 0x0E:	//上位机急停帧	控制电机急停
+		case 0x0E:	
 			UploadH_Read_0x14();
 		break;
 		
-		case 0x0F:	//上位机暂停帧 
+		case 0x0F:	
 			UploadH_Read_0x15();
 		break;
 	}		
@@ -207,28 +232,42 @@ void UploadH_Read_0x11(void)
 
 void UploadH_Read_0x12(void)
 {
-	if(g_tUploadH.RxBuf[6] == '1'){TEMPSTOP_ON;}
-	else if(g_tUploadH.RxBuf[6] == '0'){TEMPSTOP_OFF;}
-	
+
 }
 
 void UploadH_Read_0x13(void)
 {
-	if(g_tUploadH.RxBuf[6] == '1') {RUNLIGHT_ON;}
-	else if(g_tUploadH.RxBuf[6] == '0') {RUNLIGHT_OFF;}
+
 }
 
 void UploadH_Read_0x14(void)
 {
-	if(g_tUploadH.RxBuf[6] == '1'){EMRLIGHT_ON;}	//急停灯亮
-	else if(g_tUploadH.RxBuf[6] == '0'){EMRLIGHT_OFF;}	//急停灯灭
+  switch(g_tCtrlH.ObjectID)
+  {
+    case EMRLIGHT:
+      if(g_tCtrlH.ObjectState == LIGHT_ON){EMRLIGHT_ON;}	//急停灯亮
+      else if(g_tCtrlH.ObjectState == LIGHT_OFF){EMRLIGHT_OFF;}	//急停灯灭
+      break;
+    case RUNLIGHT:
+      if(g_tCtrlH.ObjectState == LIGHT_ON){RUNLIGHT_ON;}	
+      else if(g_tCtrlH.ObjectState == LIGHT_OFF){RUNLIGHT_OFF;}	
+      break;
+    case TEMPSTOP:
+      if(g_tCtrlH.ObjectState == LIGHT_ON){TEMPSTOP_ON;}	
+      else if(g_tCtrlH.ObjectState == LIGHT_OFF){TEMPSTOP_OFF;}
+      break;
+    default:;  
+  }
 }
 
 void UploadH_Read_0x15(void)
 {	
-
-	if(g_tUploadH.RxBuf[6] == '1') {ZBREAK_Lock();}
-	else if(g_tUploadH.RxBuf[6] == '0') {ZBREAK_Unlock();}
+  uint8_t SERVO_ID = g_tCtrlH.ObjectID;
+  if (SERVO_ID == SERVOY || SERVO_ID == SERVOZ1 || SERVO_ID == SERVOZ2 || SERVO_ID == SERVOZ3)
+  {
+    if(g_tCtrlH.ObjectState == LOCKED){ZBREAK_Lock(SERVO_ID);}
+    else if(g_tCtrlH.ObjectState == UNLOCKED){ZBREAK_Unlock(SERVO_ID);}
+  }
 }
 
 

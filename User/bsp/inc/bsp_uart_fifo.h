@@ -19,10 +19,10 @@
 */
 
 /* 定义使能的串口, 0 表示不使能（不增加代码大小）， 1表示使能 */
-#define	UART1_FIFO_EN	1
+#define	UART1_FIFO_EN	0
 #define	UART3_FIFO_EN	0
 #define	UART2_FIFO_EN	0
-#define	UART5_FIFO_EN 0
+#define	UART5_FIFO_EN 1
 
 /* RS485芯片发送使能GPIO, PH8 */
 #define RCC_RS485_TXEN 	RCC_AHB1Periph_GPIOH
@@ -65,7 +65,8 @@ typedef enum
 	#define UART5_BAUD			115200
 	#define UART5_TX_BUF_SIZE	1*1024
 	#define UART5_RX_BUF_SIZE	2*1024
-	#define Upload_FIFO 	COM5
+//	#define Upload_FIFO 	COM5
+  #define Upload_Port 	COM5
 #endif
 
 /* 串口设备结构体 */
