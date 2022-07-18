@@ -78,16 +78,38 @@ void motor_finish(uint8_t* state_axis_FINISH, uint8_t axis)
       axis_result = Z3_FINISH; break;
     default:;    
   }
+
+  switch(*state_axis_FINISH)
+  {
+    case IDLE:
+      if(axis_result == 1) *state_axis_FINISH = WAIT_UP_1;
+    break;
+    case WAIT_UP_1:
+      if(axis_result == 1) *state_axis_FINISH = WAIT_UP_2;
+      else *state_axis_FINISH = IDLE;
+    break;
+    case WAIT_UP_2:
+      if(axis_result == 1)
+      {
+        *state_axis_FINISH = WAIT_DOWN_1;
+        g_tCtrlH.Motor_finish[axis] = 0x00;  //清零到位信号
+      }
+      else *state_axis_FINISH = IDLE;
+    break;      
+    case WAIT_DOWN_1:
+      if(axis_result == 0) *state_axis_FINISH = WAIT_DOWN_2;
+    break;
+    case WAIT_DOWN_2:
+      if(axis_result == 0)
+      {
+        *state_axis_FINISH = IDLE;
+        g_tCtrlH.Motor_finish[axis] = 0x01;  //置位到位信号
+      }       
+      else *state_axis_FINISH = WAIT_DOWN_1;
+    break;
+  }
   
-  if(axis_result == 0)
-  {
-    g_tCtrlH.Motor_finish[axis] = 1;	//置位到位信号
-  }
-  else
-  {
-    g_tCtrlH.Motor_finish[axis] = 0;	//清零到位信号
-    printf("%d", axis);
-  }
+  if(g_tCtrlH.Motor_finish[axis] == 0x00) printf("%d", axis);
 }
 
 void motor_alarm(uint8_t* state_axis_ALARM, uint8_t axis)
@@ -111,16 +133,38 @@ void motor_alarm(uint8_t* state_axis_ALARM, uint8_t axis)
       axis_result = Z3_Alarm; break;
     default:;    
   }
+
+  switch(*state_axis_ALARM)
+  {
+    case IDLE:
+      if(axis_result == 0) *state_axis_ALARM = WAIT_UP_1;
+    break;
+    case WAIT_UP_1:
+      if(axis_result == 0) *state_axis_ALARM = WAIT_UP_2;
+      else *state_axis_ALARM = IDLE;
+    break;
+    case WAIT_UP_2:
+      if(axis_result == 0)
+      {
+        *state_axis_ALARM = WAIT_DOWN_1;
+        g_tCtrlH.Motor_alarm[axis] = 0x00; //清零报警信号
+      }
+      else *state_axis_ALARM = IDLE;
+    break;      
+    case WAIT_DOWN_1:
+      if(axis_result == 1) *state_axis_ALARM = WAIT_DOWN_2;
+    break;
+    case WAIT_DOWN_2:
+      if(axis_result == 1)
+      {
+        *state_axis_ALARM = IDLE;
+        g_tCtrlH.Motor_alarm[axis] = 0x01; //置位报警信号
+      }       
+      else *state_axis_ALARM = WAIT_DOWN_1;
+    break;
+  }
   
-  if(axis_result == 0)
-  {
-    g_tCtrlH.Motor_alarm[axis] = 0;	//清零信号
-  }
-  else
-  {
-    g_tCtrlH.Motor_alarm[axis] = 1;	//置位信号
-    printf("%d", axis+0x60);
-  }
+  if(g_tCtrlH.Motor_alarm[axis] == 0x01)	printf("%d", axis+0x60);
 }
 
 void common_signals(uint8_t* state_signal, uint8_t signal)
@@ -140,16 +184,47 @@ void common_signals(uint8_t* state_signal, uint8_t signal)
       sig_result = DOOR_DETC; break;
     default:;    
   }
+
+  switch(*state_signal)
+  {
+    case IDLE:
+      if(sig_result == 1) *state_signal = WAIT_UP_1;
+    break;
+    case WAIT_UP_1:
+      if(sig_result == 1) *state_signal = WAIT_UP_2;
+      else *state_signal = IDLE;
+    break;
+    case WAIT_UP_2:
+      if(sig_result == 1)
+      {
+        g_tCtrlH.signals[signal] = 0x01;  //产生信号
+        *state_signal = WAIT_DOWN_1;  //等待信号释放
+      }
+      else *state_signal = IDLE;
+    break;      
+    case WAIT_DOWN_1:
+      if(sig_result == 0) *state_signal = WAIT_DOWN_2_1;
+    break;
+    case WAIT_DOWN_2_1:
+      if(sig_result == 0) *state_signal = WAIT_DOWN_1_1;
+    break;
+    case WAIT_DOWN_1_1:
+      if(sig_result == 0) *state_signal = WAIT_DOWN_1_2;
+    break;
+    case WAIT_DOWN_1_2:
+      if(sig_result == 0) *state_signal = WAIT_DOWN_2;
+    break;
+    case WAIT_DOWN_2:
+      if(sig_result == 0)
+      {
+        g_tCtrlH.signals[signal] = 0x00;
+        *state_signal = IDLE;
+      }       
+      else *state_signal = WAIT_DOWN_1;
+    break;
+  }
   
-  if(sig_result == 0)
-  {
-    g_tCtrlH.signals[signal] = 0x00;
-  }
-  else
-  {
-    g_tCtrlH.signals[signal] = 0x01;	//产生信号
-    printf("%d", signal+0xA0);
-  }
+  if(g_tCtrlH.signals[signal] == 0x01) printf("%d", signal+0xA0);
 }
 
 void PortScan(void)
