@@ -44,6 +44,8 @@ int main(void)
 {
 	bsp_Init();						/* 硬件初始化 */
   PrintfLogo();					/* 打印例程信息到串口1 */
+  
+  for(int i=0;i<7;i++) g_tCtrlH.Motor_finish[i] = 0x01;
 
 	/* 进入主程序循环体 */
 	while (1)
