@@ -25,11 +25,11 @@ CtrlH_T g_tCtrlH;
 uint8_t g_modh_timeout = 0;
 
 static void UploadH_AnalyseFrame(void);
-static void UploadH_Read_0x11(void);
-static void UploadH_Read_0x12(void);
-static void UploadH_Read_0x13(void);
-static void UploadH_Read_0x14(void);
-static void UploadH_Read_0x15(void);
+static void UploadH_Read_11(void);
+static void UploadH_Read_12(void);
+static void UploadH_Read_13(void);
+static void UploadH_Read_14(void);
+static void UploadH_Read_15(void);
 void UploadH_SendError(void);
 
 
@@ -195,23 +195,23 @@ static void UploadH_AnalyseFrame(void)
 	switch (g_tCtrlH.FrameID)
 	{
     case 0x0B:
-      UploadH_Read_0x11();
+      UploadH_Read_11();
     break;
     
 		case 0x0C:	
-			UploadH_Read_0x12();
+			UploadH_Read_12();
 		break;
 		
 		case 0x0D:	
-			UploadH_Read_0x13();
+			UploadH_Read_13();
 		break;
 		
 		case 0x0E:	
-			UploadH_Read_0x14();
+			UploadH_Read_14();
 		break;
 		
 		case 0x0F:	
-			UploadH_Read_0x15();
+			UploadH_Read_15();
 		break;
 	}		
 }
@@ -224,23 +224,24 @@ static void UploadH_AnalyseFrame(void)
 *	返 回 值: 无
 *********************************************************************************************************
 */
-void UploadH_Read_0x11(void)
+void UploadH_Read_11(void)
 {
 	__set_FAULTMASK(1); //关闭所有中断
 	NVIC_SystemReset(); //复位
 }
 
-void UploadH_Read_0x12(void)
+void UploadH_Read_12(void)
 {
 
 }
 
-void UploadH_Read_0x13(void)
+void UploadH_Read_13(void)  //触发激光打标机按钮，单次上升沿触发
 {
-
+  if(g_tCtrlH.ObjectState == LIGHT_ON){LASER_ON;}	
+  else if(g_tCtrlH.ObjectState == LIGHT_OFF){LASER_OFF;}
 }
 
-void UploadH_Read_0x14(void)
+void UploadH_Read_14(void)
 {
   switch(g_tCtrlH.ObjectID)
   {
@@ -252,15 +253,15 @@ void UploadH_Read_0x14(void)
       if(g_tCtrlH.ObjectState == LIGHT_ON){RUNLIGHT_ON;}	
       else if(g_tCtrlH.ObjectState == LIGHT_OFF){RUNLIGHT_OFF;}	
       break;
-    case TEMPSTOP:
-      if(g_tCtrlH.ObjectState == LIGHT_ON){TEMPSTOP_ON;}	
-      else if(g_tCtrlH.ObjectState == LIGHT_OFF){TEMPSTOP_OFF;}
-      break;
+//    case TEMPSTOP:
+//      if(g_tCtrlH.ObjectState == LIGHT_ON){TEMPSTOP_ON;}	
+//      else if(g_tCtrlH.ObjectState == LIGHT_OFF){TEMPSTOP_OFF;}
+//      break;
     default:;  
   }
 }
 
-void UploadH_Read_0x15(void)
+void UploadH_Read_15(void)
 {	
   uint8_t SERVO_ID = g_tCtrlH.ObjectID;
   if (SERVO_ID == SERVOY || SERVO_ID == SERVOZ1 || SERVO_ID == SERVOZ2 || SERVO_ID == SERVOZ3)

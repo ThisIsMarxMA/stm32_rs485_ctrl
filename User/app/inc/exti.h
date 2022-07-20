@@ -31,8 +31,8 @@
 #define RUNLIGHT_ON			  GPIO_SetBits(GPIOF,GPIO_Pin_1)	
 #define RUNLIGHT_OFF	    GPIO_ResetBits(GPIOF,GPIO_Pin_1)			//GREEN
 
-#define TEMPSTOP_ON	  	  GPIO_SetBits(GPIOF,GPIO_Pin_2)		
-#define TEMPSTOP_OFF	    GPIO_ResetBits(GPIOF,GPIO_Pin_2)			//YELLOW 
+#define LASER_ON	  	    GPIO_SetBits(GPIOF,GPIO_Pin_2)		
+#define LASER_OFF	        GPIO_ResetBits(GPIOF,GPIO_Pin_2)			//YELLOW 
 
 #define Z1BRAKE_RELEASE   GPIO_SetBits(GPIOB,GPIO_Pin_5)
 #define Z1BRAKE_CLOSE     GPIO_ResetBits(GPIOB,GPIO_Pin_5) 
