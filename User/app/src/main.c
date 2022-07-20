@@ -14,6 +14,14 @@
 #include "main.h"
 #include "modbus_host.h"
 
+#define MF_ON   0x00 
+#define MF_OFF  0x01
+#define MA_ON   0x00
+#define MA_OFF  0x01
+#define CS_ON   0x00
+#define CS_OFF  0x01
+
+
 /* 定义例程名和例程发布日期 */
 #define EXAMPLE_NAME	"MODBUS控制伺服电机"
 #define EXAMPLE_DATE	"2022-06-28"
@@ -82,14 +90,14 @@ void motor_finish(uint8_t* state_axis_FINISH, uint8_t axis)
   switch(*state_axis_FINISH)
   {
     case IDLE:
-      if(axis_result == 1) *state_axis_FINISH = WAIT_UP_1;
+      if(axis_result == MF_ON) *state_axis_FINISH = WAIT_UP_1;
     break;
     case WAIT_UP_1:
-      if(axis_result == 1) *state_axis_FINISH = WAIT_UP_2;
+      if(axis_result == MF_ON) *state_axis_FINISH = WAIT_UP_2;
       else *state_axis_FINISH = IDLE;
     break;
     case WAIT_UP_2:
-      if(axis_result == 1)
+      if(axis_result == MF_ON)
       {
         *state_axis_FINISH = WAIT_DOWN_1;
         g_tCtrlH.Motor_finish[axis] = 0x00;  //清零到位信号
@@ -97,10 +105,10 @@ void motor_finish(uint8_t* state_axis_FINISH, uint8_t axis)
       else *state_axis_FINISH = IDLE;
     break;      
     case WAIT_DOWN_1:
-      if(axis_result == 0) *state_axis_FINISH = WAIT_DOWN_2;
+      if(axis_result == MF_OFF) *state_axis_FINISH = WAIT_DOWN_2;
     break;
     case WAIT_DOWN_2:
-      if(axis_result == 0)
+      if(axis_result == MF_OFF)
       {
         *state_axis_FINISH = IDLE;
         g_tCtrlH.Motor_finish[axis] = 0x01;  //置位到位信号
@@ -137,14 +145,14 @@ void motor_alarm(uint8_t* state_axis_ALARM, uint8_t axis)
   switch(*state_axis_ALARM)
   {
     case IDLE:
-      if(axis_result == 0) *state_axis_ALARM = WAIT_UP_1;
+      if(axis_result == MA_ON) *state_axis_ALARM = WAIT_UP_1;
     break;
     case WAIT_UP_1:
-      if(axis_result == 0) *state_axis_ALARM = WAIT_UP_2;
+      if(axis_result == MA_ON) *state_axis_ALARM = WAIT_UP_2;
       else *state_axis_ALARM = IDLE;
     break;
     case WAIT_UP_2:
-      if(axis_result == 0)
+      if(axis_result == MA_ON)
       {
         *state_axis_ALARM = WAIT_DOWN_1;
         g_tCtrlH.Motor_alarm[axis] = 0x00; //清零报警信号
@@ -152,10 +160,10 @@ void motor_alarm(uint8_t* state_axis_ALARM, uint8_t axis)
       else *state_axis_ALARM = IDLE;
     break;      
     case WAIT_DOWN_1:
-      if(axis_result == 1) *state_axis_ALARM = WAIT_DOWN_2;
+      if(axis_result == MA_OFF) *state_axis_ALARM = WAIT_DOWN_2;
     break;
     case WAIT_DOWN_2:
-      if(axis_result == 1)
+      if(axis_result == MA_OFF)
       {
         *state_axis_ALARM = IDLE;
         g_tCtrlH.Motor_alarm[axis] = 0x01; //置位报警信号
@@ -188,14 +196,14 @@ void common_signals(uint8_t* state_signal, uint8_t signal)
   switch(*state_signal)
   {
     case IDLE:
-      if(sig_result == 1) *state_signal = WAIT_UP_1;
+      if(sig_result == CS_ON) *state_signal = WAIT_UP_1;
     break;
     case WAIT_UP_1:
-      if(sig_result == 1) *state_signal = WAIT_UP_2;
+      if(sig_result == CS_ON) *state_signal = WAIT_UP_2;
       else *state_signal = IDLE;
     break;
     case WAIT_UP_2:
-      if(sig_result == 1)
+      if(sig_result == CS_ON)
       {
         g_tCtrlH.signals[signal] = 0x01;  //产生信号
         *state_signal = WAIT_DOWN_1;  //等待信号释放
@@ -203,19 +211,19 @@ void common_signals(uint8_t* state_signal, uint8_t signal)
       else *state_signal = IDLE;
     break;      
     case WAIT_DOWN_1:
-      if(sig_result == 0) *state_signal = WAIT_DOWN_2_1;
+      if(sig_result == CS_OFF) *state_signal = WAIT_DOWN_2_1;
     break;
     case WAIT_DOWN_2_1:
-      if(sig_result == 0) *state_signal = WAIT_DOWN_1_1;
+      if(sig_result == CS_OFF) *state_signal = WAIT_DOWN_1_1;
     break;
     case WAIT_DOWN_1_1:
-      if(sig_result == 0) *state_signal = WAIT_DOWN_1_2;
+      if(sig_result == CS_OFF) *state_signal = WAIT_DOWN_1_2;
     break;
     case WAIT_DOWN_1_2:
-      if(sig_result == 0) *state_signal = WAIT_DOWN_2;
+      if(sig_result == CS_OFF) *state_signal = WAIT_DOWN_2;
     break;
     case WAIT_DOWN_2:
-      if(sig_result == 0)
+      if(sig_result == CS_OFF)
       {
         g_tCtrlH.signals[signal] = 0x00;
         *state_signal = IDLE;
