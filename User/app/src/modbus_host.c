@@ -253,10 +253,6 @@ void UploadH_Read_14(void)
       if(g_tCtrlH.ObjectState == LIGHT_ON){RUNLIGHT_ON;}	
       else if(g_tCtrlH.ObjectState == LIGHT_OFF){RUNLIGHT_OFF;}	
       break;
-//    case TEMPSTOP:
-//      if(g_tCtrlH.ObjectState == LIGHT_ON){TEMPSTOP_ON;}	
-//      else if(g_tCtrlH.ObjectState == LIGHT_OFF){TEMPSTOP_OFF;}
-//      break;
     default:;  
   }
 }

@@ -24,8 +24,8 @@
 
 /* 定义例程名和例程发布日期 */
 #define EXAMPLE_NAME	"MODBUS控制伺服电机"
-#define EXAMPLE_DATE	"2022-06-28"
-#define DEMO_VER			"1.0"
+#define EXAMPLE_DATE	"2022-07-26"
+#define DEMO_VER			"3.0"
 
 /* 仅允许本文件内调用的函数声明 */
 static void PrintfLogo(void);
@@ -43,9 +43,19 @@ void StateScan(void);
 int main(void)
 {
 	bsp_Init();						/* 硬件初始化 */
-  PrintfLogo();					/* 打印例程信息到串口1 */
   
-  for(int i=0;i<7;i++) g_tCtrlH.Motor_finish[i] = 0x01;
+  for(int i=0;i<SERVO_ALL;i++) 
+  {
+    g_tCtrlH.Motor_finish[i] = 0x01;
+    g_tCtrlH.Motor_alarm[i] = 0x00;
+  }
+  
+  for (int i=0;i<Sig_ALL;i++)
+  {
+    g_tCtrlH.signals[i] = 0x00;
+  }
+  
+  PrintfLogo();					/* 打印例程信息到串口1 */
 
 	/* 进入主程序循环体 */
 	while (1)
@@ -103,6 +113,7 @@ void motor_finish(uint8_t* state_axis_FINISH, uint8_t axis)
       {
         *state_axis_FINISH = WAIT_DOWN_1;
         g_tCtrlH.Motor_finish[axis] = 0x00;  //清零到位信号
+        printf("%d", axis);
       }
       else *state_axis_FINISH = IDLE;
     break;      
@@ -118,8 +129,6 @@ void motor_finish(uint8_t* state_axis_FINISH, uint8_t axis)
       else *state_axis_FINISH = WAIT_DOWN_1;
     break;
   }
-  
-  if(g_tCtrlH.Motor_finish[axis] == 0x00) printf("%d", axis);
 }
 
 void motor_alarm(uint8_t* state_axis_ALARM, uint8_t axis)
@@ -157,7 +166,7 @@ void motor_alarm(uint8_t* state_axis_ALARM, uint8_t axis)
       if(axis_result == MA_ON)
       {
         *state_axis_ALARM = WAIT_DOWN_1;
-        g_tCtrlH.Motor_alarm[axis] = 0x00; //清零报警信号
+        g_tCtrlH.Motor_alarm[axis] = 0x01; //报警信号
       }
       else *state_axis_ALARM = IDLE;
     break;      
@@ -168,7 +177,7 @@ void motor_alarm(uint8_t* state_axis_ALARM, uint8_t axis)
       if(axis_result == MA_OFF)
       {
         *state_axis_ALARM = IDLE;
-        g_tCtrlH.Motor_alarm[axis] = 0x01; //置位报警信号
+        g_tCtrlH.Motor_alarm[axis] = 0x00; //报警信号
       }       
       else *state_axis_ALARM = WAIT_DOWN_1;
     break;
@@ -207,8 +216,9 @@ void common_signals(uint8_t* state_signal, uint8_t signal)
     case WAIT_UP_2:
       if(sig_result == CS_ON)
       {
-        g_tCtrlH.signals[signal] = 0x01;  //产生信号
         *state_signal = WAIT_DOWN_1;  //等待信号释放
+        g_tCtrlH.signals[signal] = 0x01;  //产生信号
+        printf("%d", signal+0xA0);
       }
       else *state_signal = IDLE;
     break;      
@@ -234,14 +244,14 @@ void common_signals(uint8_t* state_signal, uint8_t signal)
     break;
   }
   
-  if(g_tCtrlH.signals[signal] == 0x01) printf("%d", signal+0xA0);
+//  if(g_tCtrlH.signals[signal] == 0x01) printf("%d", signal+0xA0);
 }
 
 void PortScan(void)
 {
-	static uint8_t state_Sig[5]  = {IDLE};
-	static uint8_t state_FINISH[7] 	 = {IDLE}; 
-  static uint8_t state_ALARM[7] 	 = {IDLE};
+	static uint8_t state_Sig[Sig_ALL]  = {IDLE};
+	static uint8_t state_FINISH[SERVO_ALL] 	 = {IDLE}; 
+  static uint8_t state_ALARM[SERVO_ALL] 	 = {IDLE};
 	
   for(int i = 0; i<Sig_ALL; i++)
   {
@@ -253,7 +263,7 @@ void PortScan(void)
     /* 轴到位信号输入 */
     motor_finish(&state_FINISH[i], i);
     /* 轴报警信号输入 */
-    motor_alarm(&state_ALARM[i], i);
+//    motor_alarm(&state_ALARM[i], i);
   }
   
 }

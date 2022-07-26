@@ -124,17 +124,17 @@ typedef struct
 	__IO uint16_t K_numer;		//K值分子
 	__IO uint16_t K_denomi;	//K值分母
   
-  __IO int16_t Motor_initial[7];	//(1,1)轴初始值
-  __IO uint8_t Motor_axisZero[7];	//轴零位信号
-	__IO uint8_t Motor_state[7];	//轴状态
-	__IO int16_t Motor_locate[7];	//轴位置 0.1mm值
-	__IO int16_t Motor_locate_Old[7];	//记录上一次位置 0.1mm值
-	__IO int32_t Motor_value[7];	//电机转角值
-	__IO uint8_t Motor_finish[7];	//轴电机是否到位  
-  __IO uint8_t Motor_alarm[7];
-	__IO int8_t Motor_dirTo0[7];	//轴电机转向零点的方向 -1或1
-	__IO uint8_t Z_Lock[7];		//刹车锁
-  __IO uint8_t signals[5];
+  __IO int16_t Motor_initial[SERVO_ALL];	//(1,1)轴初始值
+  __IO uint8_t Motor_axisZero[SERVO_ALL];	//轴零位信号
+	__IO uint8_t Motor_state[SERVO_ALL];	//轴状态
+	__IO int16_t Motor_locate[SERVO_ALL];	//轴位置 0.1mm值
+	__IO int16_t Motor_locate_Old[SERVO_ALL];	//记录上一次位置 0.1mm值
+	__IO int32_t Motor_value[SERVO_ALL];	//电机转角值
+	__IO uint8_t Motor_finish[SERVO_ALL];	//轴电机是否到位  
+  __IO uint8_t Motor_alarm[SERVO_ALL];
+	__IO int8_t Motor_dirTo0[SERVO_ALL];	//轴电机转向零点的方向 -1或1
+	__IO uint8_t Z_Lock[SERVO_ALL];		//刹车锁
+  __IO uint8_t signals[Sig_ALL];
 	
 	__IO uint8_t FrameID;	//帧ID
 	__IO uint8_t ChannelID;	//通道ID
