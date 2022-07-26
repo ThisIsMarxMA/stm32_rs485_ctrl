@@ -16,8 +16,8 @@
 
 #define MF_ON   0x00 
 #define MF_OFF  0x01
-#define MA_ON   0x00
-#define MA_OFF  0x01
+#define MA_ON   0x01
+#define MA_OFF  0x00
 #define CS_ON   0x00
 #define CS_OFF  0x01
 
