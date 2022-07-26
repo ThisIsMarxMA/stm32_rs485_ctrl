@@ -35,8 +35,8 @@
 #define SERVOX2 			 0x03		//X2Öá
 #define SERVOZ2 			 0x04		//Z2Öá
 #define SERVOX3 			 0x05		//X3Öá
-#define SERVOZ3 			 0x06		//Z3Öá
-#define SERVO_ALL		   0x07		
+//#define SERVOZ3 			 0x06		//Z3Öá
+#define SERVO_ALL		   0x06		
 
 #define EMRLIGHT       0x01
 #define RUNLIGHT       0x02
