@@ -51,7 +51,9 @@ void GPIO_Setup(void)
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;//普通输出模式
   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;//100M
 	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-  GPIO_InitStructure.GPIO_PuPd =  GPIO_PuPd_DOWN;		
+//  GPIO_InitStructure.GPIO_PuPd =  GPIO_PuPd_DOWN;		
+  //反接
+  GPIO_InitStructure.GPIO_PuPd =  GPIO_PuPd_UP;		
 	GPIO_Init(GPIOF, &GPIO_InitStructure);//初始化GPIOF
   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_5|GPIO_Pin_6|GPIO_Pin_7|GPIO_Pin_8;
   GPIO_Init(GPIOB, &GPIO_InitStructure);//初始化GPIOB
