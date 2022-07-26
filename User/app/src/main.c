@@ -55,6 +55,14 @@ int main(void)
     g_tCtrlH.signals[i] = 0x00;
   }
   
+  EMRLIGHT_OFF;
+  RUNLIGHT_OFF;
+  LASER_OFF;
+  Z1BRAKE_CLOSE;
+  Z2BRAKE_CLOSE;
+  Z3BRAKE_CLOSE;
+  YBRAKE_CLOSE;
+  
   PrintfLogo();					/* 打印例程信息到串口1 */
 
 	/* 进入主程序循环体 */
