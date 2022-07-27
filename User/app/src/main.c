@@ -190,8 +190,6 @@ void motor_alarm(uint8_t* state_axis_ALARM, uint8_t axis)
       else *state_axis_ALARM = WAIT_DOWN_1;
     break;
   }
-  
-  if(g_tCtrlH.Motor_alarm[axis] == 0x01)	printf("%d", axis+0x60);
 }
 
 void common_signals(uint8_t* state_signal, uint8_t signal)
@@ -226,7 +224,6 @@ void common_signals(uint8_t* state_signal, uint8_t signal)
       {
         *state_signal = WAIT_DOWN_1;  //等待信号释放
         g_tCtrlH.signals[signal] = 0x01;  //产生信号
-//        printf("%d", signal+0xA0);
       }
       else *state_signal = IDLE;
     break;      
@@ -251,8 +248,6 @@ void common_signals(uint8_t* state_signal, uint8_t signal)
       else *state_signal = WAIT_DOWN_1;
     break;
   }
-  
-  if(g_tCtrlH.signals[signal] == 0x01) printf("%d", signal+0xA0);
 }
 
 void PortScan(void)

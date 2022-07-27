@@ -93,12 +93,24 @@ void bsp_RunPer15ms(void)
 */
 void bsp_RunPer1ms(void)
 {	
-	static uint8_t count = 0;
-	if(++count >= 200) /* 1ms的倍频系数 */
+	static uint16_t count = 0;
+	if(++count % 200 == 0) /* 1ms的倍频系数 */
 	{
-		count = 0;
     bsp_LedToggle(3);
 	}
+  
+  if(++count >= 1500)     /* 1000ms的倍频系数 */
+  {
+    count = 0;
+    for(int signal = 0;signal<Sig_ALL; signal++)
+    {
+      if(g_tCtrlH.signals[signal] == 0x01) printf("%d", signal+0xA0);
+    }
+    for(int axis = 0; axis<SERVO_ALL; axis++)
+    {
+      if(g_tCtrlH.Motor_alarm[axis] == 0x01) printf("%d", axis+0x60);
+    }
+  }
 }
 
 /*
